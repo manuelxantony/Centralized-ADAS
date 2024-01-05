@@ -1,8 +1,8 @@
 class Road {
-  constructor(x, width, lanecount = 2) {
+  constructor(x, width, laneCount = 2) {
     this.x = x;
     this.width = width;
-    this.lanecount = lanecount;
+    this.laneCount = laneCount;
 
     this.left = x - width / 2;
     this.right = x + width / 2;
@@ -25,11 +25,11 @@ class Road {
   // this function give center position for a laneIndex
   // can be used to put car in the middle of the lane
   getLaneCenter(laneIndex) {
-    const laneWidth = this.width / this.lanecount;
+    const laneWidth = this.width / this.laneCount;
     return (
       this.left +
       laneWidth / 2 +
-      Math.min(laneIndex, this.lanecount - 1) * laneWidth // for keeping car inside road in case of out of bounds lane
+      Math.min(laneIndex, this.laneCount - 1) * laneWidth // for keeping car inside road in case of out of bounds lane
     );
   }
 
@@ -38,8 +38,8 @@ class Road {
     ctx.strokeStyle = "white";
 
     ctx.setLineDash([20, 20]);
-    for (let i = 1; i <= this.lanecount - 1; i++) {
-      const x = lerp(this.left, this.right, i / this.lanecount);
+    for (let i = 1; i <= this.laneCount - 1; i++) {
+      const x = lerp(this.left, this.right, i / this.laneCount);
       ctx.beginPath();
       ctx.moveTo(x, this.top);
       ctx.lineTo(x, this.bottom);
