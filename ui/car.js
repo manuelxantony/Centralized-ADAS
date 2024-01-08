@@ -1,24 +1,57 @@
 class Car {
   // x and y are the position of the car
   constructor(x, y, width, height) {
+    // car dimension properties
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
 
+    // car movement metrics
     this.speed = 0;
     this.acceleration = 0.2;
     this.maxSpeed = 3;
     this.friction = 0.03;
     this.angle = 0;
 
+    // car sensor
     this.sensor = new Sensor(this);
+    // car control
     this.controls = new Controls();
   }
 
   update(roadBorders) {
     this.#move();
+    this.polygon = this.#createPolygon();
     this.sensor.update(roadBorders);
+  }
+
+  #createPolygon() {
+    const points = [];
+    const rad = Math.hypot(this.width, this.height) / 2;
+    const alpha = Math.atan2(this.width, this.height);
+    // top right
+    points.push({
+      x: this.x - Math.sin(this.angle - alpha) * rad,
+      y: this.y - Math.cos(this.angle - alpha) * rad,
+    });
+    // top left
+    points.push({
+      x: this.x - Math.sin(this.angle + alpha) * rad,
+      y: this.y - Math.cos(this.angle + alpha) * rad,
+    });
+    // bottom left
+    points.push({
+      x: this.x - Math.sin(Math.PI + this.angle - alpha) * rad,
+      y: this.y - Math.cos(Math.PI + this.angle - alpha) * rad,
+    });
+    // bottom right
+    points.push({
+      x: this.x - Math.sin(Math.PI + this.angle + alpha) * rad,
+      y: this.y - Math.cos(Math.PI + this.angle + alpha) * rad,
+    });
+
+    return points;
   }
 
   #move() {
@@ -62,20 +95,12 @@ class Car {
   }
 
   draw(ctx) {
-    ctx.save();
-    // translating at the center of the car
-    ctx.translate(this.x, this.y);
-    ctx.rotate(-this.angle);
     ctx.beginPath();
-    ctx.rect(
-      // no x and y is here because we are already seeting x and y while translating above.
-      -this.width / 2, // we are making x and y at the center of the car
-      -this.height / 2,
-      this.width,
-      this.height
-    );
+    ctx.moveTo(this.polygon[0].x, this.polygon[0].y);
+    for (let i = 1; i < this.polygon.length; i++) {
+      ctx.lineTo(this.polygon[i].x, this.polygon[i].y);
+    }
     ctx.fill();
-    ctx.restore();
 
     this.sensor.draw(ctx);
   }
