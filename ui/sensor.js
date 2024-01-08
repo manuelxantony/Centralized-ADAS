@@ -2,23 +2,24 @@ class Sensor {
   constructor(car) {
     this.car = car;
     this.rayCount = 3;
-    this.rayLength = 100;
+    this.rayLength = 50;
     this.raySpread = Math.PI / 4; // for angle
 
     this.rays = [];
     // sensor readings
     this.readings = [];
+    this.touched = false;
   }
 
-  update(roadBorders) {
+  update(roadBorders, traffic) {
     this.#castRays();
     this.readings = [];
     for (let i = 0; i < this.rays.length; i++) {
-      this.readings.push(this.#getReadings(this.rays[i], roadBorders));
+      this.readings.push(this.#getReadings(this.rays[i], roadBorders, traffic));
     }
   }
 
-  #getReadings(ray, roadBorders) {
+  #getReadings(ray, roadBorders, traffic) {
     let touches = [];
     for (let i = 0; i < roadBorders.length; i++) {
       const touch = getIntersection(
@@ -32,9 +33,26 @@ class Sensor {
       }
     }
 
+    for (let i = 0; i < traffic.length; i++) {
+      const poly = traffic[i].polygon;
+      for (let j = 0; j < poly.length; j++) {
+        const value = getIntersection(
+          ray[0],
+          ray[1],
+          poly[j],
+          poly[(j + 1) % poly.length]
+        );
+        if (value) {
+          touches.push(value);
+        }
+      }
+    }
+
     if (touches.length == 0) {
+      this.touched = false;
       return null;
     } else {
+      this.touched = true;
       //   getIntersetion method return x, y and offset
       //   here we are just filtering for offset value
       const offsets = touches.map((e) => e.offset);

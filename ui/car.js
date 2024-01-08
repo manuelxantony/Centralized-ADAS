@@ -1,16 +1,23 @@
 class Car {
   // x and y are the position of the car
-  constructor(x, y, width, height) {
-    // car dimension properties
+  constructor(id, x, y, width, height, maxSpeed, color = "blue") {
+    //
+    this.id = id;
+
+    // car postion on road
     this.x = x;
     this.y = y;
+
+    // car dimension
     this.width = width;
     this.height = height;
+
+    this.color = color;
 
     // car movement metrics
     this.speed = 0;
     this.acceleration = 0.2;
-    this.maxSpeed = 3;
+    this.maxSpeed = maxSpeed;
     this.friction = 0.03;
     this.angle = 0;
     this.damaged = false;
@@ -19,26 +26,43 @@ class Car {
     this.sensor = new Sensor(this);
     // car control
     this.controls = new Controls();
+
+    // creating car shape
+    this.polygon = this.#createPolygon();
+
+    this.otherCarsTraffic = [];
   }
 
-  update(roadBorders) {
+  update(roadBorders, traffic) {
+    this.otherCarsTraffic = traffic.filter((t) => {
+      return this.id != t.id;
+    });
     if (!this.damaged) {
       this.#move();
-      this.polygon = this.#createPolygon();
-      this.damaged = this.#assessDamage(roadBorders);
+      this.polygon = this.#createPolygon(); // here we are updating car shape
+      this.damaged = this.#assessDamage(roadBorders, this.otherCarsTraffic);
     }
-    this.sensor.update(roadBorders);
+    this.sensor.update(roadBorders, this.otherCarsTraffic);
   }
 
-  #assessDamage(roadBorders) {
+  #assessDamage(roadBorders, traffic) {
     for (let i = 0; i < roadBorders.length; i++) {
       if (polysIntersect(this.polygon, roadBorders[i])) {
+        return true;
+      }
+    }
+
+    for (let i = 0; i < traffic.length; i++) {
+      if (polysIntersect(this.polygon, traffic[i].polygon)) {
         return true;
       }
     }
     return false;
   }
 
+  // creating shape of the car
+  // we are using polygon to get the exact borders of the car
+  // which can be later used for detecting a collision
   #createPolygon() {
     const points = [];
     const rad = Math.hypot(this.width, this.height) / 2;
@@ -68,6 +92,13 @@ class Car {
   }
 
   #move() {
+    // this is a temp fix
+    if (this.sensor.touched) {
+      this.controls.forward = false;
+    }
+
+    // we are setting the forward movement of car by default
+    //this.controls.forward = true;
     if (this.controls.forward) {
       this.speed += this.acceleration;
     }
@@ -107,11 +138,11 @@ class Car {
     this.y -= Math.cos(this.angle) * this.speed;
   }
 
-  draw(ctx) {
+  draw(ctx, color) {
     if (this.damaged) {
       ctx.fillStyle = "gray";
     } else {
-      ctx.fillStyle = "black";
+      ctx.fillStyle = color;
     }
 
     ctx.beginPath();
