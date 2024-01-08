@@ -2,6 +2,7 @@ function lerp(A, B, t) {
   return A + (B - A) * t;
 }
 
+// to find points are touching
 function getIntersection(A, B, C, D) {
   const tTop = (D.x - C.x) * (A.y - C.y) - (D.y - C.y) * (A.x - C.x);
   const uTop = (C.y - A.y) * (A.x - B.x) - (C.x - A.x) * (A.y - B.y);
@@ -20,4 +21,22 @@ function getIntersection(A, B, C, D) {
   }
 
   return null;
+}
+
+// to find polygons are intersection or not
+function polysIntersect(polygon1, polygon2) {
+  for (let i = 0; i < polygon1.length; i++) {
+    for (let j = 0; j < polygon2.length; j++) {
+      const touch = getIntersection(
+        polygon1[i],
+        polygon1[(i + 1) % polygon1.length],
+        polygon2[j],
+        polygon2[(j + 1) % polygon2.length]
+      );
+      if (touch) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
