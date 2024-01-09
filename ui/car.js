@@ -31,6 +31,17 @@ class Car {
     this.polygon = this.#createPolygon();
 
     this.otherCarsTraffic = [];
+
+    // register car in the server
+    this.#registerCar(this.id);
+  }
+
+  // register car in the server
+  async #registerCar(id) {
+    const result = await registerCar(id);
+    if (result) {
+      this.controls.forward = true;
+    }
   }
 
   update(roadBorders, traffic) {
@@ -91,10 +102,13 @@ class Car {
     return points;
   }
 
+  // server call should be from herer after registering
+  // forward and stop instruction will be coming here
   #move() {
     // this is a temp fix
     if (this.sensor.touched) {
       this.controls.forward = false;
+      this.speed -= this.acceleration / 2;
     }
 
     // we are setting the forward movement of car by default
@@ -154,4 +168,24 @@ class Car {
 
     this.sensor.draw(ctx);
   }
+}
+
+// more like can register car and register it
+async function registerCar(id) {
+  try {
+    const response = await fetch("http://localhost:8080/car/register", {
+      method: "POST",
+      body: JSON.stringify({ id: id }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const result = await response.json();
+    console.log(result);
+    return true;
+    // this.controls.forward = true;
+  } catch (error) {
+    console.error("Error: ", error);
+  }
+  return false;
 }
