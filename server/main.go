@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/manuelxantony/Centralized-ADAS/server/models"
 )
 
 func main() {
+
 	server := gin.Default()
 
 	server.Use(corsMiddleware())
@@ -16,7 +16,7 @@ func main() {
 	server.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, "pong")
 	})
-	server.POST("/car/register", RegisterCarHandler)
+	server.GET("/car/register/:id", RegisterCarHandler)
 
 	err := server.Run(":8080")
 
@@ -26,13 +26,20 @@ func main() {
 
 }
 
+// this fucnction will register the car (now just printing)
+// and calls to open a websocket connection
 func RegisterCarHandler(ctx *gin.Context) {
-	var car models.Car
-	ctx.BindJSON(&car)
 
-	log.Printf("car added with id %s", car.ID)
+	carID := ctx.Param("id")
 
-	ctx.JSON(http.StatusOK, "car added")
+	log.Printf("car added with id %s", carID)
+
+	// other db operation can be done here
+	// such are adding car ids to db...
+	car := NewCar(carID)
+	car.ServeCar(ctx)
+
+	//ctx.JSON(http.StatusOK, "car added")
 
 }
 

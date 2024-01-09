@@ -33,15 +33,43 @@ class Car {
     this.otherCarsTraffic = [];
 
     // register car in the server
-    this.#registerCar(this.id);
+    this.socket = this.#registerCar(this.id);
+
+    this.#runADAS(this.socket);
+  }
+
+  async #runADAS(socket) {
+    socket.onopen = function (e) {
+      console.log("[open] Connection established for car: ", this.id);
+      socket.send("car running");
+    };
+
+    socket.onmessage = function (event) {
+      console.log(`[message] Data received from server: ${event.data}`);
+    };
+
+    socket.onclose = function (event) {
+      if (event.wasClean) {
+        console.log(
+          `[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`
+        );
+      } else {
+        // e.g. server process killed or network down
+        // event.code is usually 1006 in this case
+        console.error("[close] Connection died");
+      }
+    };
+
+    socket.onerror = function (error) {
+      console.error(`[error]: ${error}`);
+    };
   }
 
   // register car in the server
-  async #registerCar(id) {
-    const result = await registerCar(id);
-    if (result) {
-      this.controls.forward = true;
-    }
+  #registerCar(id) {
+    let socket = new WebSocket("ws://localhost:8080/car/register/" + id);
+    console.log(socket);
+    return socket;
   }
 
   update(roadBorders, traffic) {
@@ -173,7 +201,7 @@ class Car {
 // more like can register car and register it
 async function registerCar(id) {
   try {
-    const response = await fetch("http://localhost:8080/car/register", {
+    const response = await fetch("ws://localhost:8080/car/register/", {
       method: "POST",
       body: JSON.stringify({ id: id }),
       headers: {
